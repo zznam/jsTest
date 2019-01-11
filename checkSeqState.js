@@ -232,6 +232,7 @@ checkFlagListForSeq = function (flagList, rankList, suitList, currSuit, numOfDeu
 checkSequenceState = function (cardIdList) { //cardIdList
     var ret = CardUtil.SEQUENCE_INVALID;
     if (cardIdList.length < 3) return ret;
+    if (cardIdList.length > 14) return ret;
     var i;
     var numOfAces = 0;
     var numOfJokers = 0;
