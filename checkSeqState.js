@@ -91,6 +91,92 @@ findLastExistFlag = function (flagList) {
         }
     }
 };
+findWeightForWildcard = function (flagList, rankList, suitList, currSuit, numOfDeuces) {
+    var beginFlag, endFlag;
+    var valid = true;
+    var ret = -1;
+    var isWildcardUsed = false;
+    beginFlag = findFirstExistFlag(flagList);
+    endFlag = findLastExistFlag(flagList);
+    var i;
+    for (i = beginFlag; i <= endFlag; i++) {
+        //find is there any space, and fill, if more than two spaces -> invalid
+        if (flagList[i] == CardUtil.NULL) {
+            if (i == CardUtil.DEUCE_RANK - 1) {
+                var found = false;
+                //find if we can use deuce as normal card.
+                for (k = 0; k < rankList.length; k++) {
+                    if (rankList[k] > CardUtil.DEUCE_RANK) break;
+                    if (rankList[k] == CardUtil.DEUCE_RANK &&
+                        suitList[k] == currSuit &&
+                        numOfDeuces > 0) {
+                        flagList[CardUtil.DEUCE_RANK - 1] = CardUtil.EXIST;
+                        numOfDeuces--;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) continue; // skip find wildcard to use.
+            }
+            if (!isWildcardUsed) {
+                if (numOfDeuces > 0 || numOfJokers > 0) {
+                    flagList[i] = CardUtil.EXIST;
+                    isWildcardUsed = true;
+                    ret = i + 1;
+                } else {
+                    valid = false;
+                    break;
+                }
+            } else {
+                valid = false;
+                break;
+            }
+        }
+    }
+    if (valid) {
+        if (ret != -1) return ret;
+        //all normal cards on a straight => put wildcard at the end or at the first of seq.
+        for ( i = flagList.length-1; i >= 0; i--) {
+            if (flagList[i] == CardUtil.NULL) {
+                return i+1;
+            }
+        }
+    }
+    return -1;
+};
+findIndexOfWildcardInCardList = function (rankList, suitList, currSuit, numOfDeuces, numOfJokers) {
+    var j;
+    var indexOfWildCard = -1;
+    if (numOfDeuces == 2) {
+        for (j = 0; j < rankList.length; j++) {
+            var element2 = rankList[j];
+            if (element2 == CardUtil.DEUCE_RANK) {
+                indexOfWildCard = j;
+                if (suitList[j] != currSuit) break;
+            }
+        }
+    } else {
+        //TODO: case numOfAces = 1; still bug
+        if (numOfJokers == 1) {
+            for (j = rankList.length - 1; j >= 0; j++) {
+                var element3 = rankList[j];
+                if (element3 == CardUtil.JOKER_RANK) {
+                    indexOfWildCard = j;
+                    break;
+                }
+            }
+        } else {
+            for (j = 0; j < rankList.length; j++) {
+                var element4 = rankList[j];
+                if (element4 == CardUtil.DEUCE_RANK) {
+                    indexOfWildCard = j;
+                    break;
+                }
+            }
+        }
+    }
+    return indexOfWildCard;
+};
 checkFlagListForSeq = function (flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers) {
     var beginFlag, endFlag;
     var valid = true;
@@ -121,6 +207,9 @@ checkFlagListForSeq = function (flagList, rankList, suitList, currSuit, numOfDeu
                 if (numOfDeuces > 0 || numOfJokers > 0) {
                     flagList[i] = CardUtil.EXIST;
                     isWildcardUsed = true;
+                } else {
+                    valid = false;
+                    break;
                 }
             } else {
                 valid = false;
@@ -214,10 +303,10 @@ checkSequenceState = function (cardIdList) { //cardIdList
         flagList.push(CardUtil.NULL);
     }
     var curRank = 0;
-
+    var isFind;
     if (numOfDeuces == 2) {
         //if we have two deuces, find a deuce to can use as a normal card
-        var isFind = false;
+        isFind = false;
         for (var j = 0; j < rankList.length; j++) {
             if (rankList[j] > CardUtil.DEUCE_RANK) break;
             if (rankList[j] == CardUtil.DEUCE_RANK && suitList[j] == currSuit) {
@@ -231,7 +320,7 @@ checkSequenceState = function (cardIdList) { //cardIdList
     }
     if (numOfDeuces + numOfJokers == 2) {
         //if we have one joker and one deuce, find a deuce to can use as a normal card
-        var isFind = false;
+        isFind = false;
         for (var j = 0; j < rankList.length; j++) {
             if (rankList[j] > CardUtil.DEUCE_RANK) break;
             if (rankList[j] == CardUtil.DEUCE_RANK && suitList[j] == currSuit) {
@@ -284,6 +373,46 @@ checkSequenceState = function (cardIdList) { //cardIdList
     kind = checkFlagListForSeq(flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers);
 
     return kind;
+};
+checkFlagListStraight = function (flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers) {
+    var beginFlag, endFlag;
+    var valid = true;
+    var isWildcardUsed = false;
+    beginFlag = findFirstExistFlag(flagList);
+    endFlag = findLastExistFlag(flagList);
+    for (i = beginFlag; i <= endFlag; i++) {
+        //find is there any space, and fill, if more than two spaces -> invalid
+        if (flagList[i] == CardUtil.NULL) {
+            if (i == CardUtil.DEUCE_RANK - 1) {
+                var found = false;
+                //find if we can use deuce as normal card.
+                for (k = 0; k < rankList.length; k++) {
+                    if (rankList[k] > CardUtil.DEUCE_RANK) break;
+                    if (rankList[k] == CardUtil.DEUCE_RANK &&
+                        suitList[k] == currSuit &&
+                        numOfDeuces > 0) {
+                        flagList[CardUtil.DEUCE_RANK - 1] = 1;
+                        numOfDeuces--;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) continue;
+            }
+            if (!isWildcardUsed) {
+                if (numOfDeuces > 0 || numOfJokers > 0) {
+                    flagList[i] = CardUtil.EXIST;
+                    isWildcardUsed = true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    return valid;
+
 };
 checkIsStraight = function (cardIdList) { //cardIdList
     var ret = false;
@@ -423,46 +552,7 @@ checkIsStraight = function (cardIdList) { //cardIdList
     return valid;
 };
 
-checkFlagListStraight = function (flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers) {
-    var beginFlag, endFlag;
-    var valid = true;
-    var isWildcardUsed = false;
-    beginFlag = findFirstExistFlag(flagList);
-    endFlag = findLastExistFlag(flagList);
-    for (i = beginFlag; i <= endFlag; i++) {
-        //find is there any space, and fill, if more than two spaces -> invalid
-        if (flagList[i] == CardUtil.NULL) {
-            if (i == CardUtil.DEUCE_RANK - 1) {
-                var found = false;
-                //find if we can use deuce as normal card.
-                for (k = 0; k < rankList.length; k++) {
-                    if (rankList[k] > CardUtil.DEUCE_RANK) break;
-                    if (rankList[k] == CardUtil.DEUCE_RANK &&
-                        suitList[k] == currSuit &&
-                        numOfDeuces > 0) {
-                        flagList[CardUtil.DEUCE_RANK - 1] = 1;
-                        numOfDeuces--;
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) continue;
-            }
-            if (!isWildcardUsed) {
-                if (numOfDeuces > 0 || numOfJokers > 0) {
-                    flagList[i] = CardUtil.EXIST;
-                    isWildcardUsed = true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-    }
-    return valid;
 
-};
 
 class CardObj {
     /* 
@@ -564,47 +654,55 @@ sortSequence = function (cardList) { //Card.js
     if (numOfAces == 2) {
         cardList[0].weight = CardUtil.DEUCE_RANK;
     }
-    var indexOfWildCard = -1;
-    var weightForWildCard;
-    for (var l = 0; l < rankList.length - 1; l++) {
-        if (rankList[l + 1] - rankList[l] == 2 &&
-            suitList[l + 1] === suitList[l] &&
-            suitList[l + 1] === currSuit) {
-            weightForWildCard = l + 0.5;
-            break;
+    //fill all normal cards in flagList, if flagList is 0-1-1-1-1-0-0... => valid sequences
+    var flagList = [];
+    for (i = 0; i < CardUtil.JOKER_RANK; i++) {
+        flagList.push(CardUtil.NULL);
+    }
+    var curRank = 0;
+    //find rank exist as normal card in list.
+    for (i = 0; i < flagList.length; i++) {
+        curRank++;
+        if (curRank == CardUtil.DEUCE_RANK || curRank == CardUtil.JOKER_RANK || curRank == CardUtil.ACE_RANK) continue;
+        if (rankList.indexOf(curRank) >= 0) {
+            flagList[i] = curRank;
         }
     }
-    var j;
-    if (weightForWildCard > 0) {
-        if (numOfDeuces == 2) {
-            for (j = 0; j < rankList.length; j++) {
-                var element2 = rankList[j];
-                if (element2 == CardUtil.DEUCE_RANK) {
-                    indexOfWildCard = j;
-                    if (suitList[j] != currSuit) break;
-                }
-            }
-        } else {
-            //TODO: case numOfAces = 1; still bug
-            if (numOfJokers == 1) {
-                for (j = rankList.length - 1; j >= 0; j++) {
-                    var element3 = rankList[j];
-                    if (element3 == CardUtil.JOKER_RANK) {
-                        indexOfWildCard = j;
-                        break;
-                    }
-                }
-            } else {
-                for (j = 0; j < rankList.length; j++) {
-                    var element4 = rankList[j];
-                    if (element4 == CardUtil.DEUCE_RANK) {
-                        indexOfWildCard = j;
-                        break;
-                    }
-                }
-            }
+    //if we have two aces add it in the begin and the end of flag list
+    if (numOfAces == 2) {
+        flagList[0] = 1;
+        flagList[13] = 1;
+    }
+    //divide into two cases: 
+    // ace at the beginning of the sequence
+    // ace at the ending of the sequence
+    var flagList1 = [];
+    var flagList2 = [];
+    if (numOfAces == 1) {
+        for (i = 0; i < CardUtil.ACE_AT_END_SEQ_RANK; i++) {
+            var flag = flagList[i];
+            flagList1.push(flag);
+            flagList2.push(flag);
         }
-        if (indexOfWildCard > -1) cardList[indexOfWildCard].weight = weightForWildCard;
+        flagList1[0] = 1;
+        flagList2[CardUtil.ACE_AT_END_SEQ_RANK - 1] = 1;
+    }
+
+    var weight = 0;
+    if (flagList1.length > 0) {
+        weight = findWeightForWildcard(flagList1, rankList, suitList, currSuit, numOfDeuces);
+        if (weight <= 0 ) {
+            weight = findWeightForWildcard(flagList2, rankList, suitList, currSuit, numOfDeuces);
+        }
+    }
+    if (weight <= 0) {
+        weight = findWeightForWildcard(flagList, rankList, suitList, currSuit, numOfDeuces);
+    }
+    console.log(" weight",  weight);
+    if (weight > 0) {
+        var index = findIndexOfWildcardInCardList(rankList, suitList, currSuit, numOfDeuces, numOfJokers);
+        console.log(" index",  index);
+        if (index >=0) cardList[index].weight = weight;
     }
     sortCardObjListByWeight(cardList);
     return cardList;
@@ -618,6 +716,9 @@ let arr4 = [102, 24, 32, 36, 82, 94, 98];
 let arr5 = [32, 90, 87];
 let arr6 = [25, 17, 55];
 let arr7 = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45];
+// let arr8 = [21, 9, 13, 4];
+// let arr8 = [1, 9, 13, 4];
+// let arr8 = [1, 5, 9, 13, 4];
 let arr8 = [1, 5, 9, 13, 4];
 let arr9 = [6, 9, 13, 59];
 let arr10 = [54, 90, 13, 98, 102, 5, 36];
@@ -648,12 +749,14 @@ arrOfArr.push(arr12);
 // }
 for (let index = 0; index < arrOfArr.length; index++) {
     const element = arrOfArr[index];
-    let wannaSortList = [];
-    for (let i = 0; i < element.length; i++) {
-        let cardObj = new CardObj(element[i]);
-        console.log("create cardObj", JSON.stringify(cardObj));
-        wannaSortList.push(cardObj);
+    // if (index != 8) continue;
+    if (checkSequenceState(element) != CardUtil.SEQUENCE_INVALID) {
+        let wannaSortList = [];
+        for (let i = 0; i < element.length; i++) {
+            let cardObj = new CardObj(element[i]);
+            // console.log("create cardObj", JSON.stringify(cardObj));
+            wannaSortList.push(cardObj);
+        }
+        console.log("sortedList,", index, "\n", sortSequence(wannaSortList));
     }
-    if (checkSequenceState(element)!= CardUtil.SEQUENCE_INVALID) console.log("sortedList\n", sortSequence(wannaSortList));
-
 }
