@@ -295,7 +295,10 @@ checkSequenceState = function (cardIdList) { //cardIdList
     if (numOfJokers > 1) return ret;
     if (numOfAces > 2) return ret;
     if (numOfJokers + numOfDeuces > 2) return ret;
-
+    if (numOfAces == 2) {
+        if (numOfDeuces == 2) return ret;
+        if (numOfJokers == 1) return ret;
+    }
 
     //fill all normal cards in flagList, if flagList is 0-1-1-1-1-0-0... => valid sequences
     var flagList = [];
