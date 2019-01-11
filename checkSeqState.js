@@ -308,10 +308,11 @@ checkSequenceState = function (cardIdList) { //cardIdList
     }
     var curRank = 0;
     var isFind;
+    var j;
     if (numOfDeuces == 2) {
         //if we have two deuces, find a deuce to can use as a normal card
         isFind = false;
-        for (var j = 0; j < rankList.length; j++) {
+        for (j = 0; j < rankList.length; j++) {
             if (rankList[j] > CardUtil.DEUCE_RANK) break;
             if (rankList[j] == CardUtil.DEUCE_RANK && suitList[j] == currSuit) {
                 flagList[CardUtil.DEUCE_RANK - 1] = CardUtil.EXIST;
@@ -325,7 +326,7 @@ checkSequenceState = function (cardIdList) { //cardIdList
     if (numOfDeuces + numOfJokers == 2) {
         //if we have one joker and one deuce, find a deuce to can use as a normal card
         isFind = false;
-        for (var j = 0; j < rankList.length; j++) {
+        for (j = 0; j < rankList.length; j++) {
             if (rankList[j] > CardUtil.DEUCE_RANK) break;
             if (rankList[j] == CardUtil.DEUCE_RANK && suitList[j] == currSuit) {
                 flagList[CardUtil.DEUCE_RANK - 1] = CardUtil.EXIST;
@@ -659,7 +660,8 @@ sortSequence = function (cardList) { //Card.js
     }
     //if we have two aces, moved one ace to end of seq
     if (numOfAces == 2) {
-        cardList[0].weight = CardUtil.DEUCE_RANK;
+        cardList[0].weight = CardUtil.JOKER_RANK;
+        console.log("cardList[0]",cardList[0]);
     }
     //fill all normal cards in flagList, if flagList is 0-1-1-1-1-0-0... => valid sequences
     var flagList = [];
@@ -721,7 +723,7 @@ let arr3 = [102, 24, 32, 36, 82, 94, 98];
 let arr4 = [102, 24, 32, 36, 82, 94, 98];
 let arr5 = [32, 90, 87];
 let arr6 = [25, 17, 55];
-let arr7 = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49];
+let arr7 = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49,55];
 // let arr8 = [21, 9, 13, 4];
 // let arr8 = [1, 9, 13, 4];
 // let arr8 = [1, 5, 9, 13, 4];
