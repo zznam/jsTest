@@ -91,7 +91,7 @@ findLastExistFlag = function (flagList) {
         }
     }
 };
-findWeightForWildcard = function (flagList, rankList, suitList, currSuit, numOfDeuces) {
+findWeightForWildcard = function (flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers) {
     var beginFlag, endFlag;
     var valid = true;
     var ret = -1;
@@ -133,12 +133,12 @@ findWeightForWildcard = function (flagList, rankList, suitList, currSuit, numOfD
             }
         }
     }
-    if (valid) {
+    if (valid && isWildcardUsed) {
         if (ret != -1) return ret;
-        //all normal cards on a straight => put wildcard at the end or at the first of seq.
-        for ( i = flagList.length-1; i >= 0; i--) {
+        //all normal cards on a straight => if we have wild cards put wildcard at the end or at the first of seq.
+        for (i = flagList.length - 1; i >= 0; i--) {
             if (flagList[i] == CardUtil.NULL) {
-                return i+1;
+                return i + 1;
             }
         }
     }
@@ -690,19 +690,18 @@ sortSequence = function (cardList) { //Card.js
 
     var weight = 0;
     if (flagList1.length > 0) {
-        weight = findWeightForWildcard(flagList1, rankList, suitList, currSuit, numOfDeuces);
-        if (weight <= 0 ) {
-            weight = findWeightForWildcard(flagList2, rankList, suitList, currSuit, numOfDeuces);
+        weight = findWeightForWildcard(flagList1, rankList, suitList, currSuit, numOfDeuces, numOfJokers);
+        if (weight <= 0) {
+            weight = findWeightForWildcard(flagList2, rankList, suitList, currSuit, numOfDeuces, numOfJokers);
         }
+    } else {
+        weight = findWeightForWildcard(flagList, rankList, suitList, currSuit, numOfDeuces, numOfJokers);
     }
-    if (weight <= 0) {
-        weight = findWeightForWildcard(flagList, rankList, suitList, currSuit, numOfDeuces);
-    }
-    console.log(" weight",  weight);
+    console.log(" weight", weight);
     if (weight > 0) {
         var index = findIndexOfWildcardInCardList(rankList, suitList, currSuit, numOfDeuces, numOfJokers);
-        console.log(" index",  index);
-        if (index >=0) cardList[index].weight = weight;
+        console.log(" index", index);
+        if (index >= 0) cardList[index].weight = weight;
     }
     sortCardObjListByWeight(cardList);
     return cardList;
@@ -715,7 +714,7 @@ let arr3 = [102, 24, 32, 36, 82, 94, 98];
 let arr4 = [102, 24, 32, 36, 82, 94, 98];
 let arr5 = [32, 90, 87];
 let arr6 = [25, 17, 55];
-let arr7 = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45];
+let arr7 = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49];
 // let arr8 = [21, 9, 13, 4];
 // let arr8 = [1, 9, 13, 4];
 // let arr8 = [1, 5, 9, 13, 4];
@@ -749,7 +748,7 @@ arrOfArr.push(arr12);
 // }
 for (let index = 0; index < arrOfArr.length; index++) {
     const element = arrOfArr[index];
-    // if (index != 8) continue;
+    if (index != 7) continue;
     if (checkSequenceState(element) != CardUtil.SEQUENCE_INVALID) {
         let wannaSortList = [];
         for (let i = 0; i < element.length; i++) {
