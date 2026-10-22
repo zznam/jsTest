@@ -4,13 +4,19 @@ const nodemailer = require('nodemailer');
 // Generate test SMTP service account from ethereal.email
 // Only needed if you don't have a real mail account for testing
 nodemailer.createTestAccount((err, account) => {
+    if (err) {
+        console.error('Could not create a test mail account:', err.message);
+        process.exitCode = 1;
+        return;
+    }
     // create reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
+        host: account.smtp.host,
+        port: account.smtp.port,
+        secure: account.smtp.secure,
         auth: {
-            user: 'd7opdaekvga5kxnc@ethereal.email',
-            pass: 'weTFKKr4fKNjkEY3d1'
+            user: account.user,
+            pass: account.pass
         }
     });
 
